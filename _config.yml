@@ -7,8 +7,8 @@ highlighter: pygments
 logo: true
 paginate: 15
 baseurl: /
-domain_name: 'http://yourblog-domain.com'
-google_analytics: 'UA-XXXXXXXX-X'
+domain_name: 'http://xcuze.me'
+google_analytics: 'UA-59881462-1'
 
 # Details for the RSS feed generator
 url:            'www.xcuze.me'
