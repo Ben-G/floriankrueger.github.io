@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>Florian Krüger - Software Developer & Enthusiast</title>
+    <meta name="description" content="Blogging about tech, mostly iOS & OS X" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/main.css" />
+
+</head>
+<body class="post-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/">Home</a>
+        <a class="subscribe-button icon-feed" href="/rss.xml">Subscribe</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Testing Reactive Clients</h1>
+            <section class="post-meta">                
+                <time class="post-date" datetime="2015-02-18">18 Feb 2015</time>
+                 
+                    on ios, osx, cocoa, reactivecocoa, and testing 
+                
+            </section>
+        </header>
+
+<!--         <header class="post-header">
+            <a id="blog-logo" href="www.xcuze.me">
+                
+                    <img src="true" alt="Florian Krüger" />
+                 
+            </a>
+        </header> -->
+        
+        <!-- <span class="post-meta">
+            <time datetime="2015-02-18">18 Feb 2015</time>
+             
+                on ios, osx, cocoa, reactivecocoa, and testing 
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Testing Reactive Clients</h1> -->
+
+        <section class="post-content">
+            <p>Unittesting is a topic in the iOS Developer Community of which we all know that we should do it but most of us honestly don&#39;t do it. That is for one part because the tools we use didn&#39;t support writing and executing unittests for a long time and setting them up was kind of a pain. That of course changed at some point in the past but at that point we all had achived a certain speed in developing applications for our platforms. To be honest: writing tests makes you slower - at least in the beginning. Most often we are not able or not willing to sacrifice our speed for learning how to efficiently write unittests by just doing it in our everyday work. And looking back at a couple of years that were possible without tests seem to prove that <em>&quot;we are good enough to write applications without tests&quot;</em>.</p>
+
+<p>I&#39;m also guilty of using these excuses myself although I&#39;m very well aware that I really should write more tests. So I try to do it every now and then but when things get somewhat intense and deadlines come closer .. you know the situation.</p>
+
+<p>Anyways - last summer when I saw the excellent talks by John Reid and Graham Lee and heard about how they do unit tests as well as end-to-end tests at facebook, I started thinking about the topic more again and came to the point where I realized how reassuring it must be to have a big test coverage in projects that are somewhat bigger than your average todo list app. And the fact to be able to develop everything - even your network code - when your completely offline (given that you have a correct and complete documentation on your hands) is a big big bonus.</p>
+
+<p>So on my way back from NSSpain I started applying those methods to my current tasks. John Reid demonstrated how to mock network communication build upon AFNetworking - without any mocking framework. I never thought of building the mocking part of my tests myself but the example looked so simple and pragmatic that I wanted to try it. Problem is: our HTTP client is 100% reactive - built upon <em>ReactiveCocoa</em> and <em>AFNetworking-RACExtensions</em>, so there are no blocks to store and call. The solution isn&#39;t too complex but it took me a while to figure out how to do it efficiently and without too much boilerplate code so here&#39;s what I did.</p>
+
+<p>Just to be sure that I said it upfront: I don&#39;t claim that this is <em>the</em> solution. It&#39;s just what I came up with so use it on your own risk and send me any feedback you have, good or bad.</p>
+
+<h2>Faking the HTTP Client</h2>
+
+<p>The key of the unittesting method John demonstrated is faking the HTTP connection at the point where the client takes over and returns the parsed JSON to the caller. The client under consideration calls the <code>- (RACSignal *)rac_GET:(NSString *)path parameters:(NSDictionary *)parameters</code> method from <em>AFNetworking-RACExtensions</em> Pod (for a GET request for instance). I was lucky as these calls were already encapsulated.</p>
+<div class="highlight"><pre><code class="language-objective-c" data-lang="objective-c"><span class="cp">#pragma mark - HTTP Methods</span>
+
+<span class="p">-</span> <span class="p">(</span><span class="n">RACSignal</span> <span class="o">*</span><span class="p">)</span><span class="nf">GET:</span><span class="p">(</span><span class="bp">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">urlString</span> <span class="nf">parameters:</span><span class="p">(</span><span class="bp">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nv">parameters</span>
+<span class="p">{</span>
+  <span class="k">return</span> <span class="p">[</span><span class="nb">self</span><span class="p">.</span><span class="n">httpClient</span> <span class="nl">rac_GET</span><span class="p">:</span><span class="n">urlString</span> <span class="nl">parameters</span><span class="p">:</span><span class="n">parameters</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="p">-</span> <span class="p">(</span><span class="n">RACSignal</span> <span class="o">*</span><span class="p">)</span><span class="nf">POST:</span><span class="p">(</span><span class="bp">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">urlString</span> <span class="nf">parameters:</span><span class="p">(</span><span class="bp">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nv">parameters</span>
+<span class="p">{</span>
+  <span class="k">return</span> <span class="p">[</span><span class="nb">self</span><span class="p">.</span><span class="n">httpClient</span> <span class="nl">rac_POST</span><span class="p">:</span><span class="n">urlString</span> <span class="nl">parameters</span><span class="p">:</span><span class="n">parameters</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="p">-</span> <span class="p">(</span><span class="n">RACSignal</span> <span class="o">*</span><span class="p">)</span><span class="nf">PUT:</span><span class="p">(</span><span class="bp">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">urlString</span> <span class="nf">parameters:</span><span class="p">(</span><span class="bp">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nv">parameters</span>
+<span class="p">{</span>
+  <span class="k">return</span> <span class="p">[</span><span class="nb">self</span><span class="p">.</span><span class="n">httpClient</span> <span class="nl">rac_PUT</span><span class="p">:</span><span class="n">urlString</span> <span class="nl">parameters</span><span class="p">:</span><span class="n">parameters</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="c1">// .. and so on</span>
+</code></pre></div>
+<p>This is the point where my fake client could jump in and take over. So I created a Subclass of my client (let&#39;s call the client class <code>MYReactiveClient</code>) which I called <code>MYReactiveTestClient</code>. This client overrides the methods you can see above. I&#39;m going to focus on a single HTTP Method from now on - GET - as it is barely identical for all the other methods. I&#39;m sure you&#39;ll figure out what to do.</p>
+<div class="highlight"><pre><code class="language-objective-c" data-lang="objective-c"><span class="p">-</span> <span class="p">(</span><span class="n">RACSignal</span> <span class="o">*</span><span class="p">)</span><span class="nf">GET:</span><span class="p">(</span><span class="bp">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">urlString</span> <span class="nf">parameters:</span><span class="p">(</span><span class="bp">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nv">parameters</span>
+<span class="p">{</span>
+  <span class="nb">self</span><span class="p">.</span><span class="n">lastUrlString</span> <span class="o">=</span> <span class="n">urlString</span><span class="p">;</span>   <span class="c1">// 1</span>
+  <span class="nb">self</span><span class="p">.</span><span class="n">lastParameters</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">;</span> <span class="c1">// 2</span>
+  <span class="nb">self</span><span class="p">.</span><span class="n">getCallCount</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>           <span class="c1">// 3</span>
+
+  <span class="k">return</span> <span class="nb">self</span><span class="p">.</span><span class="n">subject</span><span class="p">;</span>              <span class="c1">// 4</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>As you can see, the fake client does some capturing before it returns a property of its own called <code>subject</code>. It first stores the called URL String (line 1) and the given parameters (line 2) and increases the count of GET calls (line 3). This is only for checking the correctness of the call later on in case it is interesting for your unit test.</p>
+
+<p>The <code>subject</code> that is returned from this method (line 4) is a <code>RACSubject</code> that is given to the fake client before any call is made that would cause the client to call the GET method. I&#39;m reusing this property for all HTTP Methods by the way as other assertions will be wrong anyways should the wrong method be called.</p>
+
+<p>Another thing I needed to do in order for the client to work is the class method which normally returns the singleton instance of the client. It basically returns a new instance of the fake client for each call instead of a singleton for now, nothing magical here.</p>
+
+<h2>Testing</h2>
+
+<p>So enough preface, let&#39;s write a unit test which uses the fake client.</p>
+<div class="highlight"><pre><code class="language-objective-c" data-lang="objective-c"><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFetchLatestItems</span>
+<span class="p">{</span>
+  <span class="n">MYReactiveTestClient</span> <span class="o">*</span><span class="n">client</span> <span class="o">=</span> <span class="p">[</span><span class="n">MYReactiveTestClient</span> <span class="n">sharedInstance</span><span class="p">];</span> <span class="c1">// 1</span>
+  <span class="n">client</span><span class="p">.</span><span class="n">subject</span> <span class="o">=</span> <span class="p">[</span><span class="n">RACSubject</span> <span class="n">subject</span><span class="p">];</span>                                <span class="c1">// 2</span>
+
+  <span class="k">__block</span> <span class="kt">id</span> <span class="n">val</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>                                                 <span class="c1">// 3</span>
+
+  <span class="p">[[</span><span class="n">client</span> <span class="n">fetchLatestItems</span><span class="p">]</span> <span class="nl">subscribeNext</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">id</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>                    <span class="c1">// 4</span>
+      <span class="n">val</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+  <span class="p">}];</span>
+
+  <span class="bp">NSDictionary</span> <span class="o">*</span><span class="n">json</span> <span class="o">=</span> <span class="p">[</span><span class="n">MYResponseHelper</span> <span class="n">randomLatestItemsResponse</span><span class="p">];</span>    <span class="c1">// 5</span>
+  <span class="p">[</span><span class="nb">self</span><span class="p">.</span><span class="n">client</span><span class="p">.</span><span class="n">subject</span> <span class="nl">sendNext</span><span class="p">:</span><span class="n">json</span><span class="p">];</span>                                  <span class="c1">// 6</span>
+  <span class="p">[</span><span class="nb">self</span><span class="p">.</span><span class="n">client</span><span class="p">.</span><span class="n">subject</span> <span class="n">sendCompleted</span><span class="p">];</span>                                  <span class="c1">// 7</span>
+
+  <span class="n">XCTAssertTrue</span><span class="p">([</span><span class="n">val</span> <span class="nl">isKindOfClass</span><span class="p">:[</span><span class="n">MYLatestItemsResponse</span> <span class="k">class</span><span class="p">]]);</span>     <span class="c1">// 8</span>
+  <span class="n">XCTAssertEqual</span><span class="p">(</span><span class="nb">self</span><span class="p">.</span><span class="n">client</span><span class="p">.</span><span class="n">getCallCount</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>                          <span class="c1">// 9</span>
+  <span class="n">XCTAssertEqual</span><span class="p">([</span><span class="nb">self</span><span class="p">.</span><span class="n">client</span> <span class="n">totalCallCount</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>                      <span class="c1">// 10</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>This test does the following: It creates a new fake client in line 1 and initializes a new <code>RACSubject</code> which is assigned to the fake clients <code>subject</code> property in line 2. The <code>RACSubject</code> will later be used to simulate a successful network call that returns a parsed JSON object in form of a <code>NSDictionary</code>. In line 3 a block variable is declared which is used to store the value returned to the &#39;next&#39; block of the signal. Line 4 calls the method under test (<code>fetchLatestItems</code>) and subscribes to the &#39;next&#39; event. Within the &#39;next&#39; block we&#39;re now storing the returned value inside <code>val</code>. After subscribing to the signal of the fake client, we&#39;re now able to send some data to the <code>RACSubject</code> to start the test: we create a <code>NSDictionary</code> in line 5, send a &#39;next&#39; event with this dictionary to the subject (line 6) and then complete the subject (line 7).</p>
+
+<p>After all the internal mechanics of the client have done their job we can now assert that everything went right: three things are necessary to be sure. First (line 8), the <code>val</code> variable must be of class <code>MYLatestItemsResponse</code>. If it was <code>nil</code> the &#39;next&#39; block wasn&#39;t called and there potentially an error (most likely the model doesn&#39;t match) or a problem with the client itself. Next we need to know which networking method was called. In line 9 we make sure that the GET method was called exactly one time and in line 10 we make sure that only one method was called in total to be 200% sure that only the GET method was called.</p>
+
+<h2>Reducing Boilerplate</h2>
+
+<p>There are a few things here that we can improve in order to reduce boilerplate. The first thing is to make the client and its setup part of the testclass. It is likely that we need the same client for all the tests in this suite so why not make use of <code>setUp</code> and <code>tearDown</code>?</p>
+<div class="highlight"><pre><code class="language-objective-c" data-lang="objective-c"><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setUp</span>
+<span class="p">{</span>
+  <span class="p">[</span><span class="nb">super</span> <span class="n">setUp</span><span class="p">];</span>
+  <span class="nb">self</span><span class="p">.</span><span class="n">client</span> <span class="o">=</span> <span class="p">[</span><span class="n">MYReactiveTestClient</span> <span class="n">sharedInstance</span><span class="p">];</span>
+  <span class="nb">self</span><span class="p">.</span><span class="n">client</span><span class="p">.</span><span class="n">subject</span> <span class="o">=</span> <span class="p">[</span><span class="n">RACSubject</span> <span class="n">subject</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">tearDown</span>
+<span class="p">{</span>
+  <span class="nb">self</span><span class="p">.</span><span class="n">client</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
+  <span class="p">[</span><span class="nb">super</span> <span class="n">tearDown</span><span class="p">];</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>We will need a property named <code>client</code> of type <code>MYReactiveTestClient</code> in order
+for this to work of course.</p>
+
+<p>With this modification in place, we can reduce the test a little in term of LOC:</p>
+<div class="highlight"><pre><code class="language-objective-c" data-lang="objective-c"><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFetchLatestItems</span>
+<span class="p">{</span>
+  <span class="k">__block</span> <span class="kt">id</span> <span class="n">val</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
+
+  <span class="p">[[</span><span class="nb">self</span><span class="p">.</span><span class="n">client</span> <span class="n">fetchLatestItems</span><span class="p">]</span> <span class="nl">subscribeNext</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">id</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+  <span class="p">}];</span>
+
+  <span class="bp">NSDictionary</span> <span class="o">*</span><span class="n">json</span> <span class="o">=</span> <span class="p">[</span><span class="n">MYResponseHelper</span> <span class="n">randomLatestItemsResponse</span><span class="p">];</span>
+  <span class="p">[</span><span class="nb">self</span><span class="p">.</span><span class="n">client</span><span class="p">.</span><span class="n">subject</span> <span class="nl">sendNext</span><span class="p">:</span><span class="n">json</span><span class="p">];</span>
+  <span class="p">[</span><span class="nb">self</span><span class="p">.</span><span class="n">client</span><span class="p">.</span><span class="n">subject</span> <span class="n">sendCompleted</span><span class="p">];</span>
+
+  <span class="n">XCTAssertTrue</span><span class="p">([</span><span class="n">val</span> <span class="nl">isKindOfClass</span><span class="p">:[</span><span class="n">MYLatestItemsResponse</span> <span class="k">class</span><span class="p">]]);</span>
+  <span class="n">XCTAssertEqual</span><span class="p">(</span><span class="nb">self</span><span class="p">.</span><span class="n">client</span><span class="p">.</span><span class="n">getCallCount</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+  <span class="n">XCTAssertEqual</span><span class="p">([</span><span class="nb">self</span><span class="p">.</span><span class="n">client</span> <span class="n">totalCallCount</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The next thing one <em>could</em> do, is to give the client not a <code>RACSubject</code> but a concrete value to return (let&#39;s call the property <code>networkResult</code>). It could then return that value like this:</p>
+<div class="highlight"><pre><code class="language-objective-c" data-lang="objective-c"><span class="k">return</span> <span class="p">[</span><span class="n">RACSignal</span> <span class="k">return</span><span class="o">:</span><span class="nb">self</span><span class="p">.</span><span class="n">networkResult</span><span class="p">];</span>
+</code></pre></div>
+<p>With this in place you would be able to write your unit test a little more concise using the testing method provided by ReativeCocoa.</p>
+<div class="highlight"><pre><code class="language-objective-c" data-lang="objective-c"><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFetchLatestItems</span>
+<span class="p">{</span>
+  <span class="nb">self</span><span class="p">.</span><span class="n">client</span><span class="p">.</span><span class="n">networkResult</span> <span class="o">=</span> <span class="p">[</span><span class="n">MYResponseHelper</span> <span class="n">randomLatestItemsResponse</span><span class="p">];</span>
+
+  <span class="kt">id</span> <span class="n">val</span> <span class="o">=</span> <span class="p">[[</span><span class="nb">self</span><span class="p">.</span><span class="n">client</span> <span class="n">fetchLatestItems</span><span class="p">]</span> <span class="nl">asynchronousFirstOrDefault</span><span class="p">:</span><span class="nb">nil</span>
+                                                              <span class="nl">success</span><span class="p">:</span><span class="nb">NULL</span>
+                                                                <span class="nl">error</span><span class="p">:</span><span class="nb">NULL</span><span class="p">];</span>
+
+  <span class="n">XCTAssertTrue</span><span class="p">([</span><span class="n">val</span> <span class="nl">isKindOfClass</span><span class="p">:[</span><span class="n">MYLatestItemsResponse</span> <span class="k">class</span><span class="p">]]);</span>
+  <span class="n">XCTAssertEqual</span><span class="p">(</span><span class="nb">self</span><span class="p">.</span><span class="n">client</span><span class="p">.</span><span class="n">getCallCount</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+  <span class="n">XCTAssertEqual</span><span class="p">([</span><span class="nb">self</span><span class="p">.</span><span class="n">client</span> <span class="n">totalCallCount</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Which one of the things you like more is a question of taste. With the first approach you have full control on what the <code>RACSubject</code> does in your test and a very dumb fake client. That comes of course with the cost of more code inside the test.</p>
+
+<p>The second approach provides much shorter tests but some knowledge about the test to be run and complexity inside the client. This does only apply if you&#39;re about to test more than the success scenario of course, otherwise you&#39;re fine with the last approach show above. But as we could and should also test the error scenarios we need to find a way to return the correct thing from the fake client. Of course, there is a way we can have both.</p>
+
+<h2>My Final Approach (for now)</h2>
+
+<p>In the last iteration for now, I&#39;ve added two more properties to the fake client: An <code>NSDictionary</code> named &#39;response&#39; and an <code>NSError</code> named &#39;error&#39;. In the method <code>- (RACSignal *)returnSignal</code> the client now decides, which of its properties it has to return and how.</p>
+<div class="highlight"><pre><code class="language-objective-c" data-lang="objective-c"><span class="p">-</span> <span class="p">(</span><span class="n">RACSignal</span> <span class="o">*</span><span class="p">)</span><span class="nf">returnSignal</span>
+<span class="p">{</span>
+  <span class="n">RACSignal</span> <span class="o">*</span><span class="n">signal</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="nb">self</span><span class="p">.</span><span class="n">response</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">signal</span> <span class="o">=</span> <span class="p">[</span><span class="n">RACSignal</span> <span class="k">return</span><span class="o">:</span><span class="nb">self</span><span class="p">.</span><span class="n">response</span><span class="p">];</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nb">self</span><span class="p">.</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">signal</span> <span class="o">=</span> <span class="p">[</span><span class="n">RACSignal</span> <span class="nl">error</span><span class="p">:</span><span class="nb">self</span><span class="p">.</span><span class="n">error</span><span class="p">];</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">signal</span> <span class="o">=</span> <span class="nb">self</span><span class="p">.</span><span class="n">subject</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="k">return</span> <span class="n">signal</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The GET method for instance now returns the result of this method.</p>
+<div class="highlight"><pre><code class="language-objective-c" data-lang="objective-c"><span class="p">-</span> <span class="p">(</span><span class="n">RACSignal</span> <span class="o">*</span><span class="p">)</span><span class="nf">GET:</span><span class="p">(</span><span class="bp">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">urlString</span> <span class="nf">parameters:</span><span class="p">(</span><span class="bp">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nv">parameters</span>
+<span class="p">{</span>
+  <span class="nb">self</span><span class="p">.</span><span class="n">lastUrlString</span> <span class="o">=</span> <span class="n">urlString</span><span class="p">;</span>
+  <span class="nb">self</span><span class="p">.</span><span class="n">lastParameters</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">;</span>
+  <span class="nb">self</span><span class="p">.</span><span class="n">getCallCount</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="p">[</span><span class="nb">self</span> <span class="n">returnSignal</span><span class="p">];</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Using this client we are both able to create &#39;simple&#39; tests which just return one value (either a response or an error) as well as more complicated tests which use one or more <code>RACSignal</code> instances that we control separately for each test.</p>
+
+<h2>Closing</h2>
+
+<p>I hope I was able to give you some ideas on how to get started with unit testing on ReactiveCocoa-based systems, especially on networking systems. There is - as always - more to the topic than demonstrated here but it should get you started. A thing we didn&#39;t cover at all for instance is the check of the properties <code>lastUrlString</code> and <code>lastParameters</code> which you should do to make sure the call to your service was correct.</p>
+
+<p>Keep on testing, you&#39;ll feel better afterwards and sleep better during app launches. And make sure to watch Jon Reid&#39;s and Graham Lee&#39;s talk once they are online somewhere.</p>
+
+        </section>
+
+        
+
+        <footer class="post-footer">
+            <!-- If we want to display author's name and bio -->
+            
+                <figure class="author-image">
+                    <a class="img" href="/" style="background-image: url(/assets/images/profile.png)">
+                    <span class="hidden">Florian Krüger's Picture</span></a>
+                </figure>
+                <section class="author">
+                    <!-- Author Name -->
+                    <h4> Florian Krüger </h4>
+                    <!-- Author Bio -->
+                    <p> 
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>                
+            
+
+            <!-- Share links section -->
+            <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Testing Reactive Clients&amp;url=http://xcuze.me/ios/osx/cocoa/reactivecocoa/testing/2015/02/18/testing-reactive-clients.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://xcuze.me/ios/osx/cocoa/reactivecocoa/testing/2015/02/18/testing-reactive-clients.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=http://xcuze.me/ios/osx/cocoa/reactivecocoa/testing/2015/02/18/testing-reactive-clients.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+            
+            <!-- Disqus comments -->
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/">Florian Krüger</a> &copy; 
+               &bull; All rights reserved.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+    
+    <script type="text/javascript" src="/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-59881462-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+</body>
+</html>

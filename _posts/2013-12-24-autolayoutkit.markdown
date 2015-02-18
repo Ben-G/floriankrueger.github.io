@@ -2,7 +2,7 @@
 layout: post
 title:  "AutoLayoutKit"
 date:   2013-12-24 13:00:00
-categories: iOS OSX Cocoa CocoaTouch CocoaPods AutoLayout Framework
+categories: iOS OSX Cocoa CocoaPods AutoLayout Framework
 ---
 
 A few days ago I proudly released my first OpenSource iOS component via CocoaPods: [AutoLayoutKit](https://github.com/floriankrueger/AutoLayoutKit). It's a tiny DSL that lets you create and modify `NSLayoutConstraints` in code without all the hassle when using the native API that Apple gave us for this purpose.
