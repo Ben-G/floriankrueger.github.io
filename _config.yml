@@ -1,0 +1,15 @@
+name: Florian Krüger
+description: Software Developer & Enthusiast
+meta_description: "Blogging about tech, mostly iOS & OS X"
+
+markdown: redcarpet
+highlighter: pygments
+logo: true
+paginate: 15
+baseurl: /
+domain_name: 'http://yourblog-domain.com'
+google_analytics: 'UA-XXXXXXXX-X'
+
+# Details for the RSS feed generator
+url:            'www.xcuze.me'
+author:         'Florian Krüger'
