@@ -918,6 +918,14 @@ body:not(.post-template) .post-title {
     line-height: 1.75em;
 }
 
+/* cover attribution */
+.cover-attribution {
+    font-size: 1.4rem;
+    line-height: 1;
+    font-style: italic;
+    color: #9EABB3;
+}
+
 /* list of author links - location / url */
 .author-meta {
     padding: 0;

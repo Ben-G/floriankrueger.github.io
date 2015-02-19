@@ -1,8 +1,11 @@
 ---
-layout: post
-title:  "Testing Reactive Clients"
-#date:   XXXX-XX-XX XX:XX:XX
-categories: iOS OSX Cocoa ReactiveCocoa Testing
+layout:             post
+title:              "Testing Reactive Clients"
+#date:              XXXX-XX-XX XX:XX:XX
+categories:         iOS OSX Cocoa ReactiveCocoa Testing
+cover:              '/assets/images/post-testing-reactive-clients/cover.png'
+cover-author-name:  "MADE IN MOMENTS"
+cover-author-url:   "http://www.madeinmoments.com"
 ---
 
 Unittesting is a topic in the iOS Developer Community of which we all know that we should do it but most of us honestly don't do it. That is for one part because the tools we use didn't support writing and executing unittests for a long time and setting them up was kind of a pain. That of course changed at some point in the past but at that point we all had achived a certain speed in developing applications for our platforms. To be honest: writing tests makes you slower - at least in the beginning. Most often we are not able or not willing to sacrifice our speed for learning how to efficiently write unittests by just doing it in our everyday work. And looking back at a couple of years that were possible without tests seem to prove that *"we are good enough to write applications without tests"*.
