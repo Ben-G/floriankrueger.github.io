@@ -8,23 +8,7 @@
     <title>Florian Krüger</title>
     <link>www.xcuze.me</link>
     <description>Software Developer &amp; Enthusiast</description>
-    <pubDate>Wed, 18 Feb 2015 11:39:07 +0100</pubDate>
-    <item>
-      <title>Testing Reactive Clients</title>
-      <link>www.xcuze.me/ios/osx/cocoa/reactivecocoa/testing/2015/02/18/testing-reactive-clients.html</link>
-      <description>&lt;p&gt;Unittesting is a topic in the iOS Developer Community of which we all know that we should do it but most of us honestly don&amp;#39;t do it. That is for one part because the tools we use didn&amp;#39;t support writing and executing unittests for a long time and setting them up was kind of a pain. That of course changed at some point in the past but at that point we all had achived a certain speed in developing applications for our platforms. To be honest: writing tests makes you slower - at least in the beginning. Most often we are not able or not willing to sacrifice our speed for learning how to efficiently write unittests by just doing it in our everyday work. And looking back at a couple of years that were possible without tests seem to prove that &lt;em&gt;&amp;quot;we are good enough to write applications without tests&amp;quot;&lt;/em&gt;.&lt;/p&gt;
-</description>
-      <pubDate>Wed, 18 Feb 2015 11:39:07 +0100</pubDate>
-      <dc:date>2015-02-18T11:39:07+01:00</dc:date>
-    </item>
-    <item>
-      <title>About Keeping a Diary</title>
-      <link>www.xcuze.me/blogging/diary/thoughts/2015/02/18/about-keeping-a-diary.html</link>
-      <description>&lt;p&gt;Unlike the most guys out there, diaries and I have some history together. I started writing my first diary when I was about 13 years old but it didn&amp;#39;t worked out very long. At some point I couldn&amp;#39;t find the motivation anymore to write down what happened that day before I went to sleep. After some weeks of frustration every time I saw the book on my nightstand I finally stored it away and never looked at it again.&lt;/p&gt;
-</description>
-      <pubDate>Wed, 18 Feb 2015 11:35:13 +0100</pubDate>
-      <dc:date>2015-02-18T11:35:13+01:00</dc:date>
-    </item>
+    <pubDate>Tue, 24 Dec 2013 14:00:00 +0100</pubDate>
     <item>
       <title>AutoLayoutKit</title>
       <link>www.xcuze.me/ios/osx/cocoa/cocoapods/autolayout/framework/2013/12/24/autolayoutkit.html</link>
@@ -33,6 +17,6 @@
       <pubDate>Tue, 24 Dec 2013 14:00:00 +0100</pubDate>
       <dc:date>2013-12-24T14:00:00+01:00</dc:date>
     </item>
-    <dc:date>2015-02-18T11:39:07+01:00</dc:date>
+    <dc:date>2013-12-24T14:00:00+01:00</dc:date>
   </channel>
 </rss>
