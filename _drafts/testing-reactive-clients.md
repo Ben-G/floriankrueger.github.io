@@ -62,7 +62,7 @@ As you can see, the fake client does some capturing before it returns a property
 
 The `subject` that is returned from this method (line 4) is a `RACSubject` that is given to the fake client before any call is made that would cause the client to call the GET method. I'm reusing this property for all HTTP Methods by the way as other assertions will be wrong anyways should the wrong method be called.
 
-Another thing I needed to do in order for the client to work is the class method which normally returns the singleton instance of the client. It basically returns a new instance of the fake client for each call instead of a singleton for now, nothing magical here. [Is it necessary to use the `sharedInstance` method? Couldn't you create an instance with an initializer of the fake client? Or do you need to override `sharedInstance` because it is called from the code under test?]
+Another thing I needed to do in order for the client to work is the class method which normally returns the singleton instance of the client. The code under test uses this method to retrieve a client instance. For the test, it returns a new instance of the fake client for each call instead of a singleton, nothing magical here.
 
 ## Testing
 
