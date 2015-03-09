@@ -14,15 +14,15 @@ In recent years this has changed, but we all got used to a certain speed when it
 
 I'm also guilty of using these excuses myself although I'm very well aware that I really should write more tests. So I try to do it every now and then but when things get somewhat intense and deadlines come closer .. you know the situation.
 
-Anyways - last summer I saw the excellent talks by John Reid and Graham Lee and heard about how they do unit tests as well as end-to-end tests at facebook. I started thinking about the topic more again and realized how reassuring it must be to have a big test coverage in a project. Especially in project that are somewhat bigger than your average todo list app. And the fact to be able to develop everything - even your network code - when your completely offline (given that you have a correct and complete documentation on your hands) is a big big bonus.
+Anyways - last summer I saw the excellent talks by John Reid and Graham Lee and heard about how they do unit tests as well as end-to-end tests at facebook. I started thinking about the topic more again and realized how reassuring it must be to have a big test coverage in a project. Especially in project that are somewhat bigger than your average todo list app. And being able to develop everything - even your network code - when you're offline is a big big bonus (given that you have a correct and complete documentation on your hands).
 
-So on my way back from NSSpain I started applying those methods to my current tasks. John Reid demonstrated how to mock network communication build upon AFNetworking - without any mocking framework. I never thought of building the mocking part of my tests myself but the example looked so simple and pragmatic that I wanted to try it. When starting to design tests I ran into the following problem: our HTTP client is 100% reactive - built upon *ReactiveCocoa* and *AFNetworking-RACExtensions*, so there are no blocks to store and call [blocks? == fixtures, not sure If I understand last part of sentence]. The solution isn't too complex but it took me a while to figure out how to do it efficiently and without too much boilerplate code so here's what I did.
+So on my way back from NSSpain I started applying those methods to my current tasks. John Reid demonstrated how to mock network communication build upon AFNetworking - without any mocking framework. I never thought of building the mocking part of my tests myself but the example looked so simple and pragmatic that I wanted to try it. When starting to design tests I ran into the following problem: our HTTP client is 100% reactive - built upon *ReactiveCocoa* and *AFNetworking-RACExtensions*. The given examples in the talk, which involved asynchronous calls, store the callback blocks and execute them with mocked objects. In RAC there are no blocks to store and call (at least not at the level relevant to the tests), so I needed to work around this. The solution isn't too complex but it took me a while to figure out how to do it efficiently and without too much boilerplate code so here's what I did.
 
-~~Just to be sure that I said it upfront:~~ I don't claim that this is *the* solution. It's just what I came up with so use it on your own risk and send me any feedback you have, good or bad.
+I don't claim that this is *the* solution. It's just what I came up with so use it on your own risk and send me any feedback you have, good or bad.
 
 ## Faking the HTTP Client
 
-The key of the unit testing method John demonstrated is faking the HTTP connection at the point where the client ~~takes over and~~ returns the parsed JSON to the caller. The client under consideration calls the `- (RACSignal *)rac_GET:(NSString *)path parameters:(NSDictionary *)parameters` method from *AFNetworking-RACExtensions* Pod ~~(for a GET request for instance)~~. I was lucky as these calls were already encapsulated.
+The key of the unit testing method John demonstrated is faking the HTTP connection at the point where the client returns the parsed JSON to the caller. The client under consideration calls the `- (RACSignal *)rac_GET:(NSString *)path parameters:(NSDictionary *)parameters` method from *AFNetworking-RACExtensions* Pod. I was lucky as these calls were already encapsulated.
 
 ```objective-c
 #pragma mark - HTTP Methods
@@ -45,7 +45,7 @@ The key of the unit testing method John demonstrated is faking the HTTP connecti
 // .. and so on
 ```
 
-This is the point where my fake client could jump in and take over. So I created a Subclass of my client (let's call the client class `MYReactiveClient`) which I called `MYReactiveTestClient`. This client overrides the methods you can see above. I'm going to focus on a single HTTP Method from now on - GET - as it is ~~barely~~ almost identical for all the other methods. I'm sure you'll figure out what to do.
+This is the point where my fake client could jump in and take over. So I created a Subclass of my client (let's call the client class `MYReactiveClient`) which I called `MYReactiveTestClient`. This client overrides the methods you can see above. I'm going to focus on a single HTTP Method from now on - GET - as it is almost identical for all the other methods. I'm sure you'll figure out what to do.
 
 ```objective-c
 - (RACSignal *)GET:(NSString *)urlString parameters:(NSDictionary *)parameters
