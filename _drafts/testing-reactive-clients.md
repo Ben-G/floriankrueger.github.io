@@ -162,7 +162,7 @@ With this in place you would be able to write your unit test a little more conci
 
 Which one of the things you like more is a question of taste. With the first approach you have full control on what the `RACSubject` does in your test and a very dumb fake client. That comes of course with the cost of more code inside the test.
 
-The second approach provides much shorter tests but some knowledge about the test to be run and complexity inside the client. This does only apply if you're about to test more than the success scenario of course, otherwise you're fine with the last approach shown above. But as we could and should also test the error scenarios we need to find a way to return the correct ~~thing~~ result from the fake client. Of course, there is a way we can have both.
+The second approach provides much shorter tests but some knowledge about the test to be run and complexity inside the client. This does only apply if you're about to test more than the success scenario of course, otherwise you're fine with the last approach shown above. But as we could and should also test the error scenarios we need to find a way to return the correct result from the fake client. Of course, there is a way we can have both.
 
 ## My Final Approach (for now)
 
