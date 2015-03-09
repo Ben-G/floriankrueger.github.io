@@ -8,9 +8,9 @@ cover-author-name:  "MADE IN MOMENTS"
 cover-author-url:   "http://www.madeinmoments.com"
 ---
 
-Unit testing [should change to "unit testing" throughout the rest of the tutorial] is a controverse topic in the iOS Developer Community. We all know we should write tests, but often we don't live up to this ideal. One of the reasons is that the tools we use didn't support writing and executing unittests for a long time and setting them up was kind of a pain.
+Unit testing is a controverse topic in the iOS Developer Community. We all know we should write tests, but often we don't live up to this ideal. One of the reasons is that the tools we use didn't support writing and executing unit tests for a long time and setting them up was kind of a pain.
 
-In recent years this has changed, but we all got used to a certain speed when it comes to developing iOS applications. To be honest: writing tests makes you slower - at least in the beginning. Most often we are not able or not willing to sacrifice our speed in order to learn how to efficiently write unittests by just doing it in our everyday work. And looking back at a couple of years that were possible without tests seem to prove that *"we are good enough to write applications without tests"*.
+In recent years this has changed, but we all got used to a certain speed when it comes to developing iOS applications. To be honest: writing tests makes you slower - at least in the beginning. Most often we are not able or not willing to sacrifice our speed in order to learn how to efficiently write unit tests by just doing it in our everyday work. And looking back at a couple of years that were possible without tests seem to prove that *"we are good enough to write applications without tests"*.
 
 I'm also guilty of using these excuses myself although I'm very well aware that I really should write more tests. So I try to do it every now and then but when things get somewhat intense and deadlines come closer .. you know the situation.
 
@@ -22,7 +22,7 @@ So on my way back from NSSpain I started applying those methods to my current ta
 
 ## Faking the HTTP Client
 
-The key of the unittesting method John demonstrated is faking the HTTP connection at the point where the client ~~takes over and~~ returns the parsed JSON to the caller. The client under consideration calls the `- (RACSignal *)rac_GET:(NSString *)path parameters:(NSDictionary *)parameters` method from *AFNetworking-RACExtensions* Pod ~~(for a GET request for instance)~~. I was lucky as these calls were already encapsulated.
+The key of the unit testing method John demonstrated is faking the HTTP connection at the point where the client ~~takes over and~~ returns the parsed JSON to the caller. The client under consideration calls the `- (RACSignal *)rac_GET:(NSString *)path parameters:(NSDictionary *)parameters` method from *AFNetworking-RACExtensions* Pod ~~(for a GET request for instance)~~. I was lucky as these calls were already encapsulated.
 
 ```objective-c
 #pragma mark - HTTP Methods
