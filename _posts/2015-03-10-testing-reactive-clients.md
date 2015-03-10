@@ -6,7 +6,7 @@ categories:         iOS OSX Cocoa ReactiveCocoa Testing
 cover:              '/assets/images/post-testing-reactive-clients/cover.png'
 cover-author-name:  "MADE IN MOMENTS"
 cover-author-url:   "http://www.madeinmoments.com"
-published:          false
+published:          true
 sitemap:
   lastmod:          2015-03-09
   priority:         0.7
