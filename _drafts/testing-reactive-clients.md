@@ -6,6 +6,11 @@ categories:         iOS OSX Cocoa ReactiveCocoa Testing
 cover:              '/assets/images/post-testing-reactive-clients/cover.png'
 cover-author-name:  "MADE IN MOMENTS"
 cover-author-url:   "http://www.madeinmoments.com"
+published:          false
+sitemap:
+  lastmod:          2015-03-09
+  priority:         0.7
+  changefreq:       'monthly'
 ---
 
 Unit testing is a controverse topic in the iOS Developer Community. We all know we should write tests, but often we don't live up to this ideal. One of the reasons is that the tools we use didn't support writing and executing unit tests for a long time and setting them up was kind of a pain.

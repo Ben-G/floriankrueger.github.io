@@ -1,8 +1,14 @@
 ---
-layout: post
-title:  "About Keeping a Diary"
-#date:   XXXX-XX-XX XX:XX:XX
-categories: Blogging Diary Thoughts
+layout:         post
+title:          "About Keeping a Diary"
+#date:          XXXX-XX-XX XX:XX:XX
+categories:     Blogging Diary Thoughts
+published:      false
+sitemap:
+  lastmod:      XXXX-XX-XX
+  priority:     0.7
+  changefreq:   'monthly'
+  exclude:      'yes'
 ---
 
 Unlike the most guys out there, diaries and I have some history together. I started writing my first diary when I was about 13 years old but it didn't worked out very long. At some point I couldn't find the motivation anymore to write down what happened that day before I went to sleep. After some weeks of frustration every time I saw the book on my nightstand I finally stored it away and never looked at it again.
