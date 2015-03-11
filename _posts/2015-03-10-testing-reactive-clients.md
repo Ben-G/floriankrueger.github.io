@@ -17,17 +17,17 @@ Unit testing is a controverse topic in the iOS Developer Community. We all know 
 
 In recent years this has changed, but we all got used to a certain speed when it comes to developing iOS applications. To be honest: writing tests makes you slower - at least in the beginning. Most often we are not able or not willing to sacrifice our speed in order to learn how to efficiently write unit tests by just doing it in our everyday work. And looking back at a couple of years that were possible without tests seem to prove that *"we are good enough to write applications without tests"*.
 
-I'm also guilty of using these excuses myself although I'm very well aware that I really should write more tests. So I try to do it every now and then but when things get somewhat intense and deadlines come closer .. you know the situation.
+I'm also guilty of using these excuses ~~myself~~ although I'm very well aware that I really should write more tests. ~~So I try to do it every now and then but when things get somewhat intense and deadlines come closer .. you know the situation.~~
 
-Anyways - last summer I saw the excellent talks by John Reid and Graham Lee and heard about how they do unit tests as well as end-to-end tests at facebook. I started thinking about the topic more again and realized how reassuring it must be to have a big test coverage in a project. Especially in project that are somewhat bigger than your average todo list app. And being able to develop everything - even your network code - when you're offline is a big big bonus (given that you have a correct and complete documentation on your hands).
+~~Anyways - l~~ Last summer I saw the excellent talks by John Reid and Graham Lee and heard about how they do unit tests ~~as well as end-to-end~~ and integration tests at facebook. I started thinking about the topic more again and realized how reassuring it must be to have a big test coverage in a project. ~~Especially in project that are somewhat bigger than your average todo list app. And~~ Additionally, being able to develop everything - even your network code - when you're offline is a big big bonus ~~(given that you have a correct and complete documentation on your hands)~~.
 
-So on my way back from NSSpain I started applying those methods to my current tasks. John Reid demonstrated how to mock network communication build upon AFNetworking - without any mocking framework. I never thought of building the mocking part of my tests myself but the example looked so simple and pragmatic that I wanted to try it. When starting to design tests I ran into the following problem: our HTTP client is 100% reactive - built upon *ReactiveCocoa* and *AFNetworking-RACExtensions*. The given examples in the talk, which involved asynchronous calls, store the callback blocks and execute them with mocked objects. In RAC there are no blocks to store and call (at least not at the level relevant to the tests), so I needed to work around this. The solution isn't too complex but it took me a while to figure out how to do it efficiently and without too much boilerplate code so here's what I did.
+So on my way back from NSSpain I started applying those methods to my current tasks. John Reid demonstrated how to mock network communication built upon AFNetworking - without any mocking framework. I never thought of building the mocking part of my tests myself but the example looked so simple and pragmatic that I wanted to try it. When starting to design tests I ran into the following problem: our HTTP client is 100% reactive - built upon *ReactiveCocoa* and *AFNetworking-RACExtensions*. The given examples in the talk, which involved asynchronous calls, store the callback blocks and execute them with mocked objects. In RAC there are no blocks to store and call (at least not at the level relevant to the tests), so I needed to work around this. The solution isn't too complex but it took me a while to figure out how to do it efficiently and without too much boilerplate code so here's what I did.
 
 I don't claim that this is *the* solution. It's just what I came up with so use it on your own risk and send me any feedback you have, good or bad.
 
 ## Faking the HTTP Client
 
-The key of the unit testing method John demonstrated is faking the HTTP connection at the point where the client returns the parsed JSON to the caller. The client under consideration calls the `- (RACSignal *)rac_GET:(NSString *)path parameters:(NSDictionary *)parameters` method from *AFNetworking-RACExtensions* Pod. I was lucky as these calls were already encapsulated.
+The key of the unit testing method John demonstrated is faking the HTTP connection at the point where the client returns the parsed JSON to the caller. The client under consideration calls the `- (RACSignal *)rac_GET:(NSString *)path parameters:(NSDictionary *)parameters` method from *AFNetworking-RACExtensions* Pod. I was lucky, as these calls were already encapsulated.
 
 ```objective-c
 #pragma mark - HTTP Methods
@@ -50,7 +50,7 @@ The key of the unit testing method John demonstrated is faking the HTTP connecti
 // .. and so on
 ```
 
-This is the point where my fake client could jump in and take over. So I created a Subclass of my client (let's call the client class `MYReactiveClient`) which I called `MYReactiveTestClient`. This client overrides the methods you can see above. I'm going to focus on a single HTTP Method from now on - GET - as it is almost identical for all the other methods. I'm sure you'll figure out what to do.
+This is the point where my fake client could jump in and take over. So I created a subclass of my client (let's call the client class `MYReactiveClient`) which I called `MYReactiveTestClient`. This client overrides the methods you can see above. I'm going to focus on a single HTTP Method from now on - GET - as the approach is almost identical for all the other methods. ~~I'm sure you'll figure out what to do.~~
 
 ```objective-c
 - (RACSignal *)GET:(NSString *)urlString parameters:(NSDictionary *)parameters
@@ -63,11 +63,11 @@ This is the point where my fake client could jump in and take over. So I created
 }
 ```
 
-As you can see, the fake client does some capturing before it returns a property of its own called `subject`. It first stores the called URL String (line 1) and the given parameters (line 2) and increases the count of GET calls (line 3). This is only for checking the correctness of the call later on in case it is interesting for your unit test.
+As you can see, the fake client does some capturing before it returns a property of its own called `subject`. It first stores the called URL String (line 1) and the given parameters (line 2) and increases the count of GET calls (line 3). This is only for checking the correctness of the call later on, in case it is interesting for your unit test.
 
-The `subject` that is returned from this method (line 4) is a `RACSubject` that is given to the fake client before any call is made that would cause the client to call the GET method. I'm reusing this property for all HTTP Methods by the way as other assertions will be wrong anyways should the wrong method be called.
+The `subject` that is returned from this method (line 4) is a `RACSubject` that is given to the fake client before any call is made that would cause the client to call the GET method. I'm reusing this property for all HTTP Methods, as other assertions will be wrong anyways, should the wrong method be called.
 
-Another thing I needed to do in order for the client to work is the class method which normally returns the singleton instance of the client. The code under test uses this method to retrieve a client instance. For the test, it returns a new instance of the fake client for each call instead of a singleton, nothing magical here.
+Another thing I needed to implement in order for the client to work is the class method which normally returns the singleton instance of the client. The code under test uses this method to retrieve a client instance. For the test, it returns a new instance of the fake client for each call instead of a singleton, nothing magical here.
 
 ## Testing
 
@@ -97,11 +97,11 @@ So enough preface, let's write a unit test which uses the fake client.
 
 This test does the following: It creates a new fake client in line 1 and initializes a new `RACSubject` which is assigned to the fake clients `subject` property in line 2. The `RACSubject` will later be used to simulate a successful network call that returns a parsed JSON object in form of a `NSDictionary`. In line 3 a block variable is declared which is used to store the value returned to the 'next' block of the signal. Line 4 calls the method under test (`fetchLatestItems`) and subscribes to the 'next' event. Within the 'next' block we're now storing the returned value inside `val`. After subscribing to the signal of the fake client, we're now able to send some data to the `RACSubject` to start the test: we create a `NSDictionary` in line 5, send a 'next' event with this dictionary to the subject (line 6) and then complete the subject (line 7).
 
-After all the internal mechanics of the client have done their job we can assert three conditions to ensure that everything worked correctly. First (line 8), the `val` variable must be of class `MYLatestItemsResponse`. If it was `nil` the 'next' block wasn't called and there potentially an error (most likely the model doesn't match) or a problem with the client itself. Next, we need to know which networking method was called. In line 9 we make sure that the GET method was called exactly one time and in line 10 we make sure that only one method was called in total to be 200% sure that only the GET method was called.
+After all the internal mechanics of the client have done their job we can assert three conditions to ensure that everything worked correctly. First (line 8), the `val` variable must be of class `MYLatestItemsResponse`. If it was `nil` the 'next' block wasn't called and there potentially an error (most likely the model doesn't match) or a problem with the client itself. Next, we need to know which networking method was called. In line 9 we make sure that the GET method was called exactly one time and in line 10 we make sure that only one method was called in total, to be 200% sure that only the GET method was called.
 
 ## Reducing Boilerplate
 
-There are a few things here that we can improve in order to reduce boilerplate. The first thing is to make the client and its setup part of the testclass. It is likely that we need the same client for all the tests in this suite so why not make use of `setUp` and `tearDown`? [using `sharedInstance` here might be semantically confusing for other team members (people might think you are not using a fresh client), possible to use other initializer?]
+There are a few things here that we can improve in order to reduce boilerplate. The first thing is to make the client and its setup part of the test class. It is likely that we need the same client for all the tests in this suite so why not make use of `setUp` and `tearDown`?
 
 ```objective-c
 - (void)setUp
